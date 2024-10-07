@@ -1,9 +1,10 @@
-package org.capps.controller;
+package org.capps.servlet;
 
 import jakarta.servlet.annotation.WebServlet;
 import org.capps.entity.User;
 import org.capps.entity.UserRole;
-import org.capps.service.UserService;
+import org.capps.service.UserService;   
+import org.capps.service.implementation.UserServiceImpl;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -13,22 +14,18 @@ import java.io.IOException;
 import java.util.List;
 
 @WebServlet("/users")
-public class UserController extends HttpServlet {
+public class UserServlet extends HttpServlet {
 
-    private UserService userService;
+    private UserService userService; // Utiliser l'interface ici
 
     @Override
     public void init() throws ServletException {
         super.init();
-        userService = new UserService();
+        userService = new UserServiceImpl(); // Instanciation de l'implémentation
     }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        getUserView(request, response);
-    }
-
-    private void getUserView(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         List<User> users = userService.getAllUsers();
         request.setAttribute("users", users);
         request.getRequestDispatcher("/views/users.jsp").forward(request, response);
@@ -57,7 +54,6 @@ public class UserController extends HttpServlet {
         }
     }
 
-
     @Override
     protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         int id;
@@ -69,9 +65,9 @@ public class UserController extends HttpServlet {
         }
 
         User user = createUserFromRequest(request, response);
-        if (user == null) return; // Exit if user is null (validation failed)
+        if (user == null) return;
 
-        user.setId(id); // Set ID for updating the user
+        user.setId(id);
 
         try {
             userService.updateUser(user);
@@ -97,7 +93,6 @@ public class UserController extends HttpServlet {
         }
     }
 
-
     private User createUserFromRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String username = request.getParameter("username");
         String password = request.getParameter("password"); // Storing plaintext password
@@ -109,7 +104,7 @@ public class UserController extends HttpServlet {
         // Validate parameters
         if (username == null || password == null || firstName == null || lastName == null || email == null || roleParam == null) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "All fields are required.");
-            return null; // Return null for validation failure
+            return null;
         }
 
         // Handle role conversion
@@ -121,7 +116,6 @@ public class UserController extends HttpServlet {
             return null; // Return null for validation failure
         }
 
-        // Create and return the user object without hashing the password
         return new User(username, password, firstName, lastName, email, role);
     }
 }
