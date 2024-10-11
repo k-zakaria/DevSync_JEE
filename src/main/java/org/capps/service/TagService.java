@@ -1,4 +1,12 @@
 package org.capps.service;
 
-public class TagService {
+import org.capps.entity.Tag;
+import java.util.List;
+
+public interface TagService {
+    List<Tag> getAllTags();
+    void addTag(Tag tag);
+    void updateTag(Tag Tag);
+    Tag getTagById(int id);
+    void deleteTag(int id);
 }

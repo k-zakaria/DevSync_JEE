@@ -4,7 +4,8 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 import org.capps.entity.User;
-import org.capps.entity.UserRole;
+import org.capps.repository.UserRepository;
+import org.capps.repository.implementation.UserRepositoryImpl;
 import org.capps.service.UserService;
 
 import java.util.List;
@@ -12,88 +13,127 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
 
     private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("default");
-    private EntityManager em;
+    private UserRepository userRepository;
 
     public UserServiceImpl() {
-        em = emf.createEntityManager();
+        EntityManager em = emf.createEntityManager();
+        if (em == null) {
+            throw new IllegalStateException("EntityManager initialization failed. Check your persistence configuration.");
+        }
+        this.userRepository = new UserRepositoryImpl(em);
+    }
+
+    private EntityManager getEntityManager() {
+        EntityManager em = emf.createEntityManager();
+        if (em == null) {
+            throw new IllegalStateException("EntityManager initialization failed.");
+        }
+        return em;
     }
 
     @Override
     public List<User> getAllUsers() {
-        return em.createQuery("SELECT u FROM User u", User.class).getResultList();
+        EntityManager em = getEntityManager();
+        try {
+            em.getTransaction().begin();
+            List<User> users = userRepository.getAllUsers();
+            em.getTransaction().commit();
+            return users;
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            throw new RuntimeException("Error fetching users", e);
+        } finally {
+            em.close();
+        }
     }
 
     @Override
     public void addUser(User user) {
-        em.getTransaction().begin();
-        em.persist(user);
-        em.getTransaction().commit();
-    }
-
-    @Override
-    public void addUser(String username, String password, String firstName, String lastName, String email, UserRole role) {
-        // Validation des inputs
-        if (username == null || username.trim().isEmpty()) {
-            throw new IllegalArgumentException("Le nom d'utilisateur ne peut pas être vide.");
+        EntityManager em = getEntityManager();
+        try {
+            em.getTransaction().begin();
+            userRepository.addUser(user);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            throw new RuntimeException("Error adding user", e);
+        } finally {
+            em.close();
         }
-        if (password == null || password.trim().isEmpty()) {
-            throw new IllegalArgumentException("Le mot de passe ne peut pas être vide.");
-        }
-        if (firstName == null || firstName.trim().isEmpty()) {
-            throw new IllegalArgumentException("Le prénom ne peut pas être vide.");
-        }
-        if (lastName == null || lastName.trim().isEmpty()) {
-            throw new IllegalArgumentException("Le nom de famille ne peut pas être vide.");
-        }
-        if (email == null || email.trim().isEmpty() || !email.contains("@")) {
-            throw new IllegalArgumentException("L'email est invalide.");
-        }
-        if (role == null) {
-            throw new IllegalArgumentException("Le rôle ne peut pas être vide.");
-        }
-
-        User user = new User(username, password, firstName, lastName, email, role);
-        addUser(user);
     }
 
     @Override
     public void updateUser(User user) {
-        // Validation de l'utilisateur
-        if (user == null) {
-            throw new IllegalArgumentException("L'utilisateur ne peut pas être null.");
+        if (user == null || user.equals(new User())) {
+            throw new IllegalArgumentException("User cannot be null.");
         }
         if (user.getUsername() == null || user.getUsername().trim().isEmpty()) {
-            throw new IllegalArgumentException("Le nom d'utilisateur ne peut pas être vide.");
+            throw new IllegalArgumentException("Username cannot be empty.");
         }
         if (user.getFirstName() == null || user.getFirstName().trim().isEmpty()) {
-            throw new IllegalArgumentException("Le prénom ne peut pas être vide.");
+            throw new IllegalArgumentException("First name cannot be empty.");
         }
         if (user.getLastName() == null || user.getLastName().trim().isEmpty()) {
-            throw new IllegalArgumentException("Le nom de famille ne peut pas être vide.");
+            throw new IllegalArgumentException("Last name cannot be empty.");
         }
         if (user.getEmail() == null || user.getEmail().trim().isEmpty() || !user.getEmail().contains("@")) {
-            throw new IllegalArgumentException("L'email est invalide.");
+            throw new IllegalArgumentException("Invalid email.");
         }
         if (user.getRole() == null) {
-            throw new IllegalArgumentException("Le rôle ne peut pas être vide.");
+            throw new IllegalArgumentException("Role cannot be empty.");
         }
-        em.getTransaction().begin();
-        em.merge(user);
-        em.getTransaction().commit();
+
+        EntityManager em = getEntityManager();
+        try {
+            em.getTransaction().begin();
+            userRepository.updateUser(user);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            throw new RuntimeException("Error updating user", e);
+        } finally {
+            em.close();
+        }
     }
 
     @Override
     public void deleteUser(int id) {
-        em.getTransaction().begin();
-        User user = em.find(User.class, id);
-        if (user != null) {
-            em.remove(user);
+        EntityManager em = getEntityManager();
+        try {
+            em.getTransaction().begin();
+            userRepository.deleteUser(id);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            throw new RuntimeException("Error deleting user", e);
+        } finally {
+            em.close();
         }
-        em.getTransaction().commit();
     }
 
     @Override
     public User getUserById(int id) {
-        return em.find(User.class, id);
+        EntityManager em = getEntityManager();
+        try {
+            em.getTransaction().begin();
+            User user = userRepository.getUserById(id);
+            em.getTransaction().commit();
+            return user;
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            throw new RuntimeException("Error fetching user by ID", e);
+        } finally {
+            em.close();
+        }
     }
 }
