@@ -7,7 +7,9 @@ import org.capps.entity.User;
 import org.capps.repository.UserRepository;
 import org.capps.repository.implementation.UserRepositoryImpl;
 import org.capps.service.UserService;
+import org.capps.servlet.PasswordUtils;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 public class UserServiceImpl implements UserService {
@@ -135,5 +137,22 @@ public class UserServiceImpl implements UserService {
         } finally {
             em.close();
         }
+    }
+
+    @Override
+    public User validateLogin(String email, String password){
+        User user = userRepository.findByEmail(email);
+
+        if (user != null){
+            try {
+                String hashPassword = PasswordUtils.hashPassword(password);
+                if(hashPassword.equals(user.getPassword())){
+                    return user;
+                }
+            }catch (NoSuchAlgorithmException e){
+                e.printStackTrace();
+            }
+        }
+        return null;
     }
 }

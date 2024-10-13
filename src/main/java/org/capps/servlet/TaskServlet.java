@@ -59,6 +59,11 @@ public class TaskServlet extends HttpServlet {
             doDelete(request, response);
         } else if ("PUT".equalsIgnoreCase(method)) {
             doPut(request, response);
+        } else if ("UPDATE_STATUS".equalsIgnoreCase(method)) {
+            Task updatedTask = updateStatus(request, response); // Appel de la méthode updateStatus
+            if (updatedTask == null) return; // Vérifier si la mise à jour a échoué
+            response.setStatus(HttpServletResponse.SC_OK);
+            response.sendRedirect(request.getContextPath() + "/tasks");
         } else {
             Task task = createTaskFromRequest(request, response);
             if (task == null) return;
@@ -70,6 +75,46 @@ public class TaskServlet extends HttpServlet {
             } catch (Exception e) {
                 response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unable to add task.");
             }
+        }
+    }
+
+
+    private Task updateStatus(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String taskIdParam = request.getParameter("taskId");
+        String statusParam = request.getParameter("status");
+
+        // Vérification des paramètres
+        if (taskIdParam == null || statusParam == null) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Task ID and Status are required.");
+            return null;
+        }
+
+        int taskId;
+        try {
+            taskId = Integer.parseInt(taskIdParam);
+        } catch (NumberFormatException e) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Task ID format.");
+            return null;
+        }
+
+        // Récupérer la tâche par ID
+        Task task = taskService.getTaskById(taskId);
+
+        if (task == null) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Task not found.");
+            return null;
+        }
+
+        try {
+            // Convertir le statut en enum
+            StatusTask newStatus = StatusTask.valueOf(statusParam.toUpperCase());
+            task.setStatus(newStatus);
+            taskService.updateTask(task);
+
+            return task; // Ici, la tâche mise à jour est retournée
+        } catch (IllegalArgumentException e) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid task status.");
+            return null;
         }
     }
 
@@ -121,7 +166,8 @@ public class TaskServlet extends HttpServlet {
         String[] tagIdParam = request.getParameterValues("tag_id"); // Récupérer les IDs des tags en tant que tableau
 
         // Validate parameters
-        if (title == null || description == null || startDateParam == null || endDateParam == null || statusParam == null || userIdParam == null || tagIdParam == null) {
+        if (title == null || description == null || startDateParam == null ||
+                endDateParam == null || statusParam == null || userIdParam == null || tagIdParam == null) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "All fields are required.");
             return null;
         }
@@ -137,6 +183,13 @@ public class TaskServlet extends HttpServlet {
             return null;
         }
 
+        //Validation : Limiter à 3 jours après la date de début
+        if (endDate.isAfter(startDate.plusDays(3))) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    "La tâche ne peut pas être planifiée à plus de 3 jours après la date de début.");
+            return null;
+        }
+
         // Handle status conversion
         StatusTask status;
         try {
@@ -146,8 +199,8 @@ public class TaskServlet extends HttpServlet {
             return null;
         }
 
-        // Fetch user (you may need to implement a method to get user by ID)
-        User user = new User(); // Placeholder: replace with actual fetching logic
+        // Fetch user (Remplace cette partie avec la logique de récupération réelle)
+        User user = new User();
         user.setId(Integer.parseInt(userIdParam));
 
         // Créer une collection de tags
@@ -160,8 +213,9 @@ public class TaskServlet extends HttpServlet {
 
         // Créer et retourner la tâche
         Task task = new Task(title, description, startDate, endDate, status, user);
-        task.setTags(tags); // Assurez-vous que vous avez la méthode setTags dans Task
+        task.setTags(tags); // Assurez-vous que la classe Task a bien cette méthode
 
         return task;
     }
+
 }

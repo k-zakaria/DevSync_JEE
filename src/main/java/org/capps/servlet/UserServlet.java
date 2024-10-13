@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 @WebServlet("/users")
@@ -108,7 +109,7 @@ public class UserServlet extends HttpServlet {
 
         try {
             userService.updateUser(user);
-            System.out.println("User with ID " + id + " updated successfully.");
+                System.out.println("User with ID " + id + " updated successfully.");
             response.setStatus(HttpServletResponse.SC_OK);
             response.sendRedirect(request.getContextPath() + "/users");
         } catch (Exception e) {
@@ -126,7 +127,7 @@ public class UserServlet extends HttpServlet {
             System.out.println("Deleting user with ID: " + id);
             userService.deleteUser(id);
             response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-            response.sendRedirect(request.getContextPath() + "/users");
+
         } catch (NumberFormatException e) {
             System.out.println("Invalid user ID provided for delete.");
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid user ID");
@@ -146,7 +147,7 @@ public class UserServlet extends HttpServlet {
         String email = request.getParameter("email");
         String roleParam = request.getParameter("role");
 
-        // Validate parameters
+        // Valider les paramètres
         if (username == null || password == null || firstName == null || lastName == null || email == null || roleParam == null) {
             System.out.println("Missing required parameters for user creation");
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "All fields are required.");
@@ -163,7 +164,19 @@ public class UserServlet extends HttpServlet {
             return null;
         }
 
+        // Hacher le mot de passe avant de créer l'utilisateur
+        String hashedPassword;
+        try {
+            hashedPassword = PasswordUtils.hashPassword(password);
+            System.out.println("Password hashed successfully");
+        } catch (NoSuchAlgorithmException e) {
+            System.out.println("Error hashing password: " + e.getMessage());
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error hashing password.");
+            return null;
+        }
+
+        // Créer l'utilisateur avec le mot de passe haché
         System.out.println("User created successfully from request");
-        return new User(username, password, firstName, lastName, email, role);
+        return new User(username, hashedPassword, firstName, lastName, email, role);
     }
 }

@@ -2,6 +2,11 @@
 <%@ page import="java.util.List" %>
 <%@ page import="org.capps.entity.Tag" %> <!-- Change le chemin selon le bon package -->
 
+<%
+    if (session.getAttribute("name") == null){
+        response.sendRedirect("authontification/login.jsp");
+    }
+%>
 <html>
 <head>
     <title>Liste des Utilisateurs</title>

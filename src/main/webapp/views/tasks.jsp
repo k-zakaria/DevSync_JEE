@@ -31,6 +31,8 @@
         <th scope="col" class="px-6 py-3">Description</th>
         <th scope="col" class="px-6 py-3">Date de début</th>
         <th scope="col" class="px-6 py-3">Date de fin</th>
+        <th class="border border-gray-400 p-2">Utilisateur</th>
+        <th class="border border-gray-400 p-2">Tags</th>
         <th scope="col" class="px-6 py-3">Statut</th>
         <th scope="col" class="px-6 py-3">Action</th>
       </tr>
@@ -50,7 +52,32 @@
         <td class="px-6 py-4"><%= task.getDescription() %></td>
         <td class="px-6 py-4"><%= task.getStartDate() %></td>
         <td class="px-6 py-4"><%= task.getEndDate() %></td>
-        <td class="px-6 py-4"><%= task.getStatus() %></td>
+        <td class="border border-gray-400 p-2">
+          <%= task.getUser().getUsername() %> - <%= task.getUser().getEmail() %>
+        </td>
+        <td class="border border-gray-400 p-2">
+          <ul>
+            <%
+              for (Tag tag : task.getTags()) {
+            %>
+            <li><%= tag.getName() %></li>
+            <%
+              }
+            %>
+          </ul>
+        </td>
+        <td class="border border-gray-400 p-2">
+          <form action="tasks" method="POST" id="statusForm_<%= task.getId() %>">
+            <input type="hidden" name="taskId" value="<%= task.getId() %>" />
+            <input type="hidden" name="_method" value="UPDATE_STATUS">
+            <select name="status" required onchange="document.getElementById('statusForm_<%= task.getId() %>').submit()">
+              <option value="PENDING" <%= task.getStatus() == StatusTask.PENDING ? "selected" : "" %>>PENDING</option>
+              <option value="IN_PROGRESS" <%= task.getStatus() == StatusTask.IN_PROGRESS ? "selected" : "" %>>IN_PROGRESS</option>
+              <option value="COMPLETED" <%= task.getStatus() == StatusTask.COMPLETED ? "selected" : "" %>>COMPLETED</option>
+              <option value="CANCELLED" <%= task.getStatus() == StatusTask.CANCELLED ? "selected" : "" %>>CANCELLED</option>
+            </select>
+          </form>
+        </td>
         <td class="px-6 py-4">
           <!-- Modal pour la mise à jour de la tâche -->
           <a href="#" data-modal-target="update-task-modal-<%= task.getId() %>" data-modal-toggle="update-task-modal-<%= task.getId() %>" class="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-3 py-2 text-center dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-blue-800 mr-2">
@@ -95,11 +122,16 @@
                   <textarea id="description-<%= task.getId() %>" name="description" rows="4" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"><%= task.getDescription() %></textarea>
                 </div>
                 <div>
-                  <label for="start_date-<%= task.getId() %>" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Start Date:</label>
-                  <input type="date" id="start_date-<%= task.getId() %>" name="start_date" value="<%= task.getStartDate() %>" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"/>
+                  <label for="start_date-<%= task.getId() %>" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                    Start Date:
+                  </label>
+                  <input type="date" id="start_date-<%= task.getId() %>" name="start_date" value="<%= task.getStartDate() %>" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" onchange="updateEndDateMin('<%= task.getId() %>')" /> <!-- Appel dynamique de la fonction JS -->
                 </div>
+
                 <div>
-                  <label for="end_date-<%= task.getId() %>" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">End Date:</label>
+                  <label for="end_date-<%= task.getId() %>" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                    End Date:
+                  </label>
                   <input type="date" id="end_date-<%= task.getId() %>" name="end_date" value="<%= task.getEndDate() %>" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"/>
                 </div>
                 <div>
@@ -184,11 +216,16 @@
               <textarea id="description" name="description" rows="4" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"></textarea>
             </div>
             <div>
-              <label for="start_date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Start Date:</label>
-              <input type="date" id="start_date" name="start_date" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"/>
+              <label for="start_date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                Start Date:
+              </label>
+              <input type="date" id="start_date" name="start_date" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" onchange="updateEndDateMin()"/>
             </div>
+
             <div>
-              <label for="end_date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">End Date:</label>
+              <label for="end_date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                End Date:
+              </label>
               <input type="date" id="end_date" name="end_date" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"/>
             </div>
             <div>
@@ -241,5 +278,15 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
+<script>
+  function updateEndDateMin() {
+    const startDate = document.getElementById('start_date').value;
+    const endDate = document.getElementById('end_date');
+
+    if (startDate) {
+      endDate.min = startDate;
+    }
+  }
+</script>
 </body>
 </html>

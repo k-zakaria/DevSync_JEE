@@ -39,6 +39,11 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public User findByEmail(String email){
+        return em.find(User.class, email);
+    }
+
+    @Override
     public void deleteUser(int id) {
         em.getTransaction().begin();
         User user = em.find(User.class, id);

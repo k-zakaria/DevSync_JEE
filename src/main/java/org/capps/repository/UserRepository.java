@@ -9,4 +9,5 @@ public interface UserRepository {
     void updateUser(User user);
     User getUserById(int id);
     void deleteUser(int id);
+    User findByEmail(String email);
 }
