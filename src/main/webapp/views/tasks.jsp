@@ -93,7 +93,6 @@
           </form>
 
           <form action="userTokenServlet" method="POST" style="display:inline;">
-            <input type="hidden" name="_method" value="PUT">
             <input type="hidden" name="userId" value="1" />
             <input type="hidden" name="taskId" value="<%= task.getId() %>" />
             <button type="submit" class="text-white bg-gradient-to-r from-pink-400 via-pink-500 to-pink-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-pink-300 dark:focus:ring-pink-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">

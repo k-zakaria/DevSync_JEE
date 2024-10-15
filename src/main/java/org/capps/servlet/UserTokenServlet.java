@@ -13,7 +13,7 @@ import org.capps.service.implementation.UserTokenServiceImpl;
 
 import java.io.IOException;
 
-@WebServlet(name="userTokenServlet")
+@WebServlet("/userTokenServlet")
 public class UserTokenServlet extends HttpServlet {
 
     private UserTokenService tokenService;
@@ -25,19 +25,7 @@ public class UserTokenServlet extends HttpServlet {
     }
 
     @Override
-    public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException{
-        String method = request.getParameter("_method");
-        if (method != null) {
-            System.out.println("Method parameter: " + method);
-        }
-
-        if ("PUT".equalsIgnoreCase(method)){
-            doPut(request, response);
-        }
-    }
-
-    @Override
-    protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         int userId = Integer.parseInt(request.getParameter("userId"));
         int taskId = Integer.parseInt(request.getParameter("taskId"));
 

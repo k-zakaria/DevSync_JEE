@@ -10,7 +10,7 @@ import org.capps.service.implementation.TaskChangeRequestServiceImpl;
 
 import java.io.IOException;
 
-@WebServlet(name="TaskChangeRequestServelet")
+@WebServlet("/taskChangeRequestServelet")
 public class TaskChangeRequestServlet extends HttpServlet {
     private TaskChangeRequestService requestService;
 
@@ -19,7 +19,7 @@ public class TaskChangeRequestServlet extends HttpServlet {
     }
 
     @Override
-    public void doPut(HttpServletRequest request, HttpServletResponse response) throws SecurityException, IOException{
+    public void doPost(HttpServletRequest request, HttpServletResponse response) throws SecurityException, IOException{
         int userId = Integer.parseInt(request.getParameter("userId"));
         int taskId = Integer.parseInt(request.getParameter("taskId"));
 

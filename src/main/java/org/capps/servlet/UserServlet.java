@@ -17,7 +17,7 @@ import java.util.List;
 @WebServlet("/users")
 public class UserServlet extends HttpServlet {
 
-    private UserService userService; // Utiliser l'interface ici
+    private UserService userService;
 
     public UserServlet() {
         try {
@@ -29,7 +29,6 @@ public class UserServlet extends HttpServlet {
             throw new RuntimeException("Failed to initialize UserServlet", e);
         }
     }
-
 
     @Override
     public void init() throws ServletException {
@@ -57,37 +56,45 @@ public class UserServlet extends HttpServlet {
         System.out.println("doPost called");
 
         String method = request.getParameter("_method");
-        if (method != null) {
-            System.out.println("Method parameter: " + method);
-        }
-
-        if ("DELETE".equalsIgnoreCase(method)) {
-            doDelete(request, response);
-        } else if ("PUT".equalsIgnoreCase(method)) {
-            doPut(request, response);
+        if (method == null) {
+            addUser(request, response);
         } else {
-            System.out.println("Adding new user...");
-            User user = createUserFromRequest(request, response);
-            if (user == null) {
-                System.out.println("User creation failed. Exiting doPost.");
-                return;
-            }
-
-            try {
-                userService.addUser(user);
-                System.out.println("User added successfully");
-                response.setStatus(HttpServletResponse.SC_CREATED);
-                response.sendRedirect(request.getContextPath() + "/users");
-            } catch (Exception e) {
-                System.out.println("Error adding user: " + e.getMessage());
-                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unable to add user.");
+            switch (method.toUpperCase()) {
+                case "DELETE":
+                    handleDelete(request, response);
+                    break;
+                case "PUT":
+                    handlePut(request, response);
+                    break;
+                default:
+                    System.out.println("Unsupported operation: " + method);
+                    response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Unsupported operation.");
             }
         }
     }
 
-    @Override
-    protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        System.out.println("doPut called: updating user");
+    private void addUser(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        System.out.println("Adding new user...");
+        User user = createUserFromRequest(request, response);
+
+        if (user == null) {
+            System.out.println("User creation failed. Exiting addUser.");
+            return;
+        }
+
+        try {
+            userService.addUser(user);
+            System.out.println("User added successfully");
+            response.setStatus(HttpServletResponse.SC_CREATED);
+            response.sendRedirect(request.getContextPath() + "/users");
+        } catch (Exception e) {
+            System.out.println("Error adding user: " + e.getMessage());
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unable to add user.");
+        }
+    }
+
+    private void handlePut(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        System.out.println("handlePut called: updating user");
 
         int id;
         try {
@@ -101,7 +108,7 @@ public class UserServlet extends HttpServlet {
 
         User user = createUserFromRequest(request, response);
         if (user == null) {
-            System.out.println("User creation from request failed in doPut.");
+            System.out.println("User creation from request failed in handlePut.");
             return;
         }
 
@@ -109,7 +116,7 @@ public class UserServlet extends HttpServlet {
 
         try {
             userService.updateUser(user);
-                System.out.println("User with ID " + id + " updated successfully.");
+            System.out.println("User with ID " + id + " updated successfully.");
             response.setStatus(HttpServletResponse.SC_OK);
             response.sendRedirect(request.getContextPath() + "/users");
         } catch (Exception e) {
@@ -118,22 +125,20 @@ public class UserServlet extends HttpServlet {
         }
     }
 
-    @Override
-    protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        System.out.println("doDelete called: deleting user");
+    private void handleDelete(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        System.out.println("handleDelete called: deleting user");
 
         try {
             int id = Integer.parseInt(request.getParameter("id"));
             System.out.println("Deleting user with ID: " + id);
             userService.deleteUser(id);
             response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-
         } catch (NumberFormatException e) {
             System.out.println("Invalid user ID provided for delete.");
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid user ID");
         } catch (Exception e) {
             System.out.println("Error deleting user: " + e.getMessage());
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "An error occurred while deleting the user");
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "An error occurred while deleting the user.");
         }
     }
 
@@ -147,8 +152,8 @@ public class UserServlet extends HttpServlet {
         String email = request.getParameter("email");
         String roleParam = request.getParameter("role");
 
-        // Valider les paramètres
-        if (username == null || password == null || firstName == null || lastName == null || email == null || roleParam == null) {
+        if (username == null || password == null || firstName == null ||
+                lastName == null || email == null || roleParam == null) {
             System.out.println("Missing required parameters for user creation");
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "All fields are required.");
             return null;
@@ -164,7 +169,6 @@ public class UserServlet extends HttpServlet {
             return null;
         }
 
-        // Hacher le mot de passe avant de créer l'utilisateur
         String hashedPassword;
         try {
             hashedPassword = PasswordUtils.hashPassword(password);
@@ -175,7 +179,6 @@ public class UserServlet extends HttpServlet {
             return null;
         }
 
-        // Créer l'utilisateur avec le mot de passe haché
         System.out.println("User created successfully from request");
         return new User(username, hashedPassword, firstName, lastName, email, role);
     }
