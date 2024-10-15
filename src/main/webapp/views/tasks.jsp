@@ -80,17 +80,28 @@
         </td>
         <td class="px-6 py-4">
           <!-- Modal pour la mise à jour de la tâche -->
-          <a href="#" data-modal-target="update-task-modal-<%= task.getId() %>" data-modal-toggle="update-task-modal-<%= task.getId() %>" class="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-3 py-2 text-center dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-blue-800 mr-2">
+          <a href="#" data-modal-target="update-task-modal-<%= task.getId() %>" data-modal-toggle="update-task-modal-<%= task.getId() %>" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">
             Update
           </a>
 
           <form action="tasks" method="post" style="display:inline;">
             <input type="hidden" name="id" value="<%= task.getId() %>">
             <input type="hidden" name="_method" value="DELETE">
-            <button type="submit" class="text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-xs px-3 py-2 text-center dark:bg-red-500 dark:hover:bg-red-600 dark:focus:ring-red-800">
+            <button type="submit" class="text-white bg-gradient-to-r from-red-400 via-red-500 to-red-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">
               Delete
             </button>
           </form>
+
+          <form action="userTokenServlet" method="POST" style="display:inline;">
+            <input type="hidden" name="_method" value="PUT">
+            <input type="hidden" name="userId" value="1" />
+            <input type="hidden" name="taskId" value="<%= task.getId() %>" />
+            <button type="submit" class="text-white bg-gradient-to-r from-pink-400 via-pink-500 to-pink-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-pink-300 dark:focus:ring-pink-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">
+              Delete the task
+            </button>
+          </form>
+
+
 
         </td>
       </tr>

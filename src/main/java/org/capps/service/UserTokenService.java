@@ -5,4 +5,5 @@ public interface UserTokenService {
     boolean consumeToken(int userId);
     boolean hasMonthlyToken(int userId);
     void useToken(int userId, boolean isMonthly);
+    void doubleTokensForUser(int userId);
 }

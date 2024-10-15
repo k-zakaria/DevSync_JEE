@@ -1,6 +1,7 @@
 package org.capps.servlet;
 
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -12,6 +13,7 @@ import org.capps.service.implementation.UserTokenServiceImpl;
 
 import java.io.IOException;
 
+@WebServlet(name="userTokenServlet")
 public class UserTokenServlet extends HttpServlet {
 
     private UserTokenService tokenService;
@@ -22,6 +24,17 @@ public class UserTokenServlet extends HttpServlet {
         taskService = new TaskServiceImpl();
     }
 
+    @Override
+    public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException{
+        String method = request.getParameter("_method");
+        if (method != null) {
+            System.out.println("Method parameter: " + method);
+        }
+
+        if ("PUT".equalsIgnoreCase(method)){
+            doPut(request, response);
+        }
+    }
 
     @Override
     protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {

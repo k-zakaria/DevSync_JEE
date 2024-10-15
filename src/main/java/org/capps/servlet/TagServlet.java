@@ -35,9 +35,9 @@ public class TagServlet extends HttpServlet {
         String method = request.getParameter("_method");
 
         if ("DELETE".equalsIgnoreCase(method)) {
-            doDelete(request, response);
+            handleDelete(request, response);
         } else if ("PUT".equalsIgnoreCase(method)) {
-            doPut(request, response);
+            handlePut(request, response);
         } else {
             Tag tag = createTagFromRequest(request, response);
             if (tag == null) return;
@@ -52,8 +52,7 @@ public class TagServlet extends HttpServlet {
         }
     }
 
-    @Override
-    protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    private void handlePut(HttpServletRequest request, HttpServletResponse response) throws IOException {
         int id;
         try {
             id = Integer.parseInt(request.getParameter("id"));
@@ -76,8 +75,7 @@ public class TagServlet extends HttpServlet {
         }
     }
 
-    @Override
-    protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    private void handleDelete(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             int id = Integer.parseInt(request.getParameter("id"));
             tagService.deleteTag(id);
@@ -101,4 +99,5 @@ public class TagServlet extends HttpServlet {
 
         return new Tag(name);
     }
+
 }

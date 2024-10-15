@@ -1,8 +1,7 @@
 package org.capps.repository.implementation;
 
+import jakarta.persistence.*;
 import org.capps.repository.UserTokenRepository;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.NoResultException;
 import org.capps.entity.UserToken;
 
 
@@ -42,8 +41,5 @@ public class UserTokenRepositoryImpl implements UserTokenRepository {
         em.merge(token);
         em.getTransaction().commit();
     }
-
-
-
 
 }

@@ -2,6 +2,7 @@ package org.capps.service.implementation;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.Persistence;
 import org.capps.entity.UserToken;
 import org.capps.repository.UserTokenRepository;
@@ -69,5 +70,18 @@ public class UserTokenServiceImpl implements UserTokenService {
             token.setTokensUsed(token.getTokensUsed() + 1);
         }
         tokenRepository.save(token);
+    }
+
+    @Override
+    public void doubleTokensForUser(int userId) {
+        // Chercher le jeton de l'utilisateur pour la date d'aujourd'hui
+        UserToken token = tokenRepository.findByUserIdAndDate(userId, LocalDate.now());
+
+        if (token != null) {
+            token.setTokensUsed(token.getTokensUsed() * 2);
+            tokenRepository.update(token);
+        } else {
+            throw new EntityNotFoundException("Aucun jeton trouvé pour l'utilisateur avec l'id : " + userId);
+        }
     }
 }
