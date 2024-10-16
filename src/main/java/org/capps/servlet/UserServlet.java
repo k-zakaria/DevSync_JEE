@@ -126,19 +126,12 @@ public class UserServlet extends HttpServlet {
     }
 
     private void handleDelete(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        System.out.println("handleDelete called: deleting user");
-
         try {
             int id = Integer.parseInt(request.getParameter("id"));
-            System.out.println("Deleting user with ID: " + id);
             userService.deleteUser(id);
-            response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+            response.sendRedirect(request.getContextPath() + "/users");
         } catch (NumberFormatException e) {
-            System.out.println("Invalid user ID provided for delete.");
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid user ID");
-        } catch (Exception e) {
-            System.out.println("Error deleting user: " + e.getMessage());
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "An error occurred while deleting the user.");
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid user ID.");
         }
     }
 

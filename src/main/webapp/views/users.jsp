@@ -3,6 +3,17 @@
 <%@ page import="org.capps.entity.User" %> <!-- Change le chemin selon le bon package -->
 <%@ page import="org.capps.entity.UserRole" %>
 
+<%
+    User utilisateur = (User) session.getAttribute("user");
+    if (utilisateur == null) {
+        response.sendRedirect("login");
+        return;
+    }
+    if (utilisateur.getRole() == UserRole.USER){
+        response.sendRedirect("tasks");
+        return;
+    }
+%>
 <html>
 <head>
     <title>Liste des Utilisateurs</title>
@@ -24,7 +35,7 @@
                     <input id="checkbox-all-search" type="checkbox" class="w-4 h-4">
                 </th>
                 <th scope="col" class="px-6 py-3">Username</th>
-                <th scope="col" class="px-6 py-3">First name</th>
+                <th scope="col" class="px-6 py-3">First name <%= utilisateur.getRole() %></th>
                 <th scope="col" class="px-6 py-3">Last name</th>
                 <th scope="col" class="px-6 py-3">Email</th>
                 <th scope="col" class="px-6 py-3">Role</th>

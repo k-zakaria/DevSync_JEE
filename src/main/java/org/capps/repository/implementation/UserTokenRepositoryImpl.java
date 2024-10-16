@@ -27,6 +27,17 @@ public class UserTokenRepositoryImpl implements UserTokenRepository {
             return null;
         }
     }
+@Override
+    public Integer getTokensUsed(int userId) {
+        try {
+            return em.createQuery("SELECT ut FROM UserToken ut WHERE ut.userId = :userId AND ut.isDeletedOnceInMonth = false", Integer.class)
+                    .setParameter("userId", userId)
+                    .getSingleResult();
+        } catch (NoResultException e) {
+            return 0;
+        }
+    }
+
 
     @Override
     public void save(UserToken token){

@@ -1,6 +1,7 @@
 package org.capps.servlet;
 
 import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpSession;
 import org.capps.entity.Tag;
 import org.capps.entity.Task;
 import org.capps.entity.StatusTask;
@@ -38,11 +39,25 @@ public class TaskServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        request.setAttribute("tasks", taskService.getAllTasks());
-        request.setAttribute("tags", tagService.getAllTags());
-        request.setAttribute("users", userService.getAllUsers());
-        request.getRequestDispatcher("/views/tasks.jsp").forward(request, response);
+        HttpSession session = request.getSession();
+        User user = (User) session.getAttribute("user");
+        int userId = user.getId();
+
+        if (taskService == null || tagService == null || userService == null) {
+            throw new IllegalStateException("Un ou plusieurs services ne sont pas initialisés.");
+        }
+
+        List<Task> tasks = taskService.getAllTasks(userId);
+        List<Tag> tags = tagService.getAllTags();
+        List<User> users = userService.getAllUsers();
+
+        request.setAttribute("tasks", tasks);
+        request.setAttribute("tags", tags);
+        request.setAttribute("users", users);
+
+        request.getRequestDispatcher("views/tasks.jsp").forward(request, response);
     }
+
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -119,36 +134,48 @@ public class TaskServlet extends HttpServlet {
     }
 
     private Task createTaskFromRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        try {
-            String title = request.getParameter("title");
-            String description = request.getParameter("description");
-            LocalDate startDate = LocalDate.parse(request.getParameter("start_date"));
-            LocalDate endDate = LocalDate.parse(request.getParameter("end_date"));
-            StatusTask status = StatusTask.valueOf(request.getParameter("status").toUpperCase());
-            int userId = Integer.parseInt(request.getParameter("user_id"));
-            String[] tagIds = request.getParameterValues("tag_id");
+        String title = request.getParameter("title");
+        String description = request.getParameter("description");
+        String startDateParam = request.getParameter("start_date");
+        String endDateParam = request.getParameter("end_date");
+        String statusParam = request.getParameter("status");
+        String userIdParam = request.getParameter("user_id");
+        String[] tagIdParam = request.getParameterValues("tag_id"); // Récupérer les IDs des tags en tant que tableau
 
-            if (title == null || description == null || tagIds == null || endDate.isAfter(startDate.plusDays(3))) {
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid input data.");
-                return null;
-            }
-
-            User user = new User();
-            user.setId(userId);
-
-            List<Tag> tags = new ArrayList<>();
-            for (String tagId : tagIds) {
-                Tag tag = new Tag();
-                tag.setId(Integer.parseInt(tagId));
-                tags.add(tag);
-            }
-
-            Task task = new Task(title, description, startDate, endDate, status, user);
-            task.setTags(tags);
-            return task;
-        } catch (Exception e) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Error processing task data.");
+        if (title == null || description == null || startDateParam == null || endDateParam == null || statusParam == null || userIdParam == null || tagIdParam == null) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "All fields are required.");
             return null;
         }
+        LocalDate startDate;
+        LocalDate endDate;
+        try {
+            startDate = LocalDate.parse(startDateParam);
+            endDate = LocalDate.parse(endDateParam);
+        } catch (Exception e) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid date format.");
+            return null;
+        }
+        StatusTask status;
+        try {
+            status = StatusTask.valueOf(statusParam.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid task status.");
+            return null;
+        }
+
+        User user = new User();
+        user.setId(Integer.parseInt(userIdParam));
+
+
+        List<Tag> tags = new ArrayList<>();
+        for (String tagId : tagIdParam) {
+            Tag tag = new Tag();
+            tag.setId(Integer.parseInt(tagId));
+            tags.add(tag);
+        }
+
+        Task task = new Task(title, description, startDate, endDate, status, user);
+        task.setTags(tags);
+        return task;
     }
 }

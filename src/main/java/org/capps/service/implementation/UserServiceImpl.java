@@ -15,57 +15,29 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
 
     private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("default");
+    private EntityManager em;
     private UserRepository userRepository;
 
     public UserServiceImpl() {
-        EntityManager em = emf.createEntityManager();
-        if (em == null) {
-            throw new IllegalStateException("EntityManager initialization failed. Check your persistence configuration.");
-        }
-        this.userRepository = new UserRepositoryImpl(em);
-    }
-
-    private EntityManager getEntityManager() {
-        EntityManager em = emf.createEntityManager();
-        if (em == null) {
-            throw new IllegalStateException("EntityManager initialization failed.");
-        }
-        return em;
+        em = emf.createEntityManager();
+        userRepository = new UserRepositoryImpl(em);
     }
 
     @Override
     public List<User> getAllUsers() {
-        EntityManager em = getEntityManager();
-        try {
-            em.getTransaction().begin();
-            List<User> users = userRepository.getAllUsers();
-            em.getTransaction().commit();
-            return users;
-        } catch (Exception e) {
-            if (em.getTransaction().isActive()) {
-                em.getTransaction().rollback();
-            }
-            throw new RuntimeException("Error fetching users", e);
-        } finally {
-            em.close();
+        List<User> users = userRepository.getAllUsers();
+        if (users == null){
+            throw new RuntimeException("Error fetching users");
         }
+        return users;
     }
 
     @Override
     public void addUser(User user) {
-        EntityManager em = getEntityManager();
-        try {
-            em.getTransaction().begin();
-            userRepository.addUser(user);
-            em.getTransaction().commit();
-        } catch (Exception e) {
-            if (em.getTransaction().isActive()) {
-                em.getTransaction().rollback();
-            }
-            throw new RuntimeException("Error adding user", e);
-        } finally {
-            em.close();
+        if (user == null || user.equals(new User())){
+            throw new IllegalArgumentException("User cannot be null.");
         }
+        userRepository.addUser(user);
     }
 
     @Override
@@ -73,70 +45,22 @@ public class UserServiceImpl implements UserService {
         if (user == null || user.equals(new User())) {
             throw new IllegalArgumentException("User cannot be null.");
         }
-        if (user.getUsername() == null || user.getUsername().trim().isEmpty()) {
-            throw new IllegalArgumentException("Username cannot be empty.");
-        }
-        if (user.getFirstName() == null || user.getFirstName().trim().isEmpty()) {
-            throw new IllegalArgumentException("First name cannot be empty.");
-        }
-        if (user.getLastName() == null || user.getLastName().trim().isEmpty()) {
-            throw new IllegalArgumentException("Last name cannot be empty.");
-        }
-        if (user.getEmail() == null || user.getEmail().trim().isEmpty() || !user.getEmail().contains("@")) {
-            throw new IllegalArgumentException("Invalid email.");
-        }
-        if (user.getRole() == null) {
-            throw new IllegalArgumentException("Role cannot be empty.");
-        }
-
-        EntityManager em = getEntityManager();
-        try {
-            em.getTransaction().begin();
-            userRepository.updateUser(user);
-            em.getTransaction().commit();
-        } catch (Exception e) {
-            if (em.getTransaction().isActive()) {
-                em.getTransaction().rollback();
-            }
-            throw new RuntimeException("Error updating user", e);
-        } finally {
-            em.close();
-        }
+        userRepository.updateUser(user);
     }
 
     @Override
     public void deleteUser(int id) {
-        EntityManager em = getEntityManager();
-        try {
-            em.getTransaction().begin();
-            userRepository.deleteUser(id);
-            em.getTransaction().commit();
-        } catch (Exception e) {
-            if (em.getTransaction().isActive()) {
-                em.getTransaction().rollback();
-            }
-            throw new RuntimeException("Error deleting user", e);
-        } finally {
-            em.close();
+        User user = userRepository.getUserById(id);
+        if (user == null){
+            throw new IllegalArgumentException("User cannot be null.");
         }
+        userRepository.deleteUser(id);
     }
 
     @Override
     public User getUserById(int id) {
-        EntityManager em = getEntityManager();
-        try {
-            em.getTransaction().begin();
-            User user = userRepository.getUserById(id);
-            em.getTransaction().commit();
-            return user;
-        } catch (Exception e) {
-            if (em.getTransaction().isActive()) {
-                em.getTransaction().rollback();
-            }
-            throw new RuntimeException("Error fetching user by ID", e);
-        } finally {
-            em.close();
-        }
+        User user = userRepository.getUserById(id);
+        return user;
     }
 
     @Override

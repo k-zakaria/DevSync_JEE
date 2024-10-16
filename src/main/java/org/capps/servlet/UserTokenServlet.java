@@ -5,7 +5,6 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.capps.entity.Task;
 import org.capps.service.TaskService;
 import org.capps.service.UserTokenService;
 import org.capps.service.implementation.TaskServiceImpl;
@@ -25,35 +24,56 @@ public class UserTokenServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         int userId = Integer.parseInt(request.getParameter("userId"));
-        int taskId = Integer.parseInt(request.getParameter("taskId"));
 
-        // Vérifier si l'utilisateur a des jetons quotidiens
-        if (!tokenService.hasTokensLeft(userId)) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No tokens available for today.");
-            return;
-        }
+        int tokensUsed = tokenService.getTokensUsed(userId);
+        request.setAttribute("tokensUsed", tokensUsed);
 
-        // Vérifier si l'utilisateur a un jeton mensuel
-        if (tokenService.hasMonthlyToken(userId)) {
-            // Consommer un jeton quotidien
-            if (tokenService.consumeToken(userId)) {
-                Task task = taskService.getTaskById(taskId);
+        request.getRequestDispatcher("/tasks").forward(request, response);
+    }
 
-                if (task != null) {
-                    taskService.deleteTask(taskId);
-                    tokenService.useToken(userId, false);
-                    response.sendRedirect("tasks");
-                } else {
-                    response.sendError(HttpServletResponse.SC_NOT_FOUND, "Task not found.");
-                }
-            } else {
-                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unable to consume daily token.");
-            }
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+        int userId = Integer.parseInt(request.getParameter("userId"));
+
+        // Vérifie si l'utilisateur effectue une suppression ou un remplacement
+        if (request.getParameter("taskId") != null) {
+            int taskId = Integer.parseInt(request.getParameter("taskId"));
+            handleTaskDeletion(userId, taskId, response);
+        } else
+            if ("replace".equals(request.getParameter("dailyTokenAction"))) {
+            handleTaskReplacement(userId, response);
         } else {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Monthly token exhausted.");
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Action invalide.");
         }
     }
+
+    // Suppression d'une tâche
+    private void handleTaskDeletion(int userId, int taskId, HttpServletResponse response) throws IOException {
+
+            if (tokenService.checkAndRecordDeletion(userId)) {
+                taskService.deleteTask(taskId);  // Supprimer la tâche
+                response.sendRedirect("tasks");  // Redirection après succès
+            } else {
+                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                        "Impossible de consommer un jeton.");
+            }
+    }
+
+    // Remplacement d'une tâche avec un jeton journalier
+    private void handleTaskReplacement(int userId, HttpServletResponse response) throws IOException {
+        if (tokenService.hasTokensLeft(userId)) {
+            // Logique de remplacement ici (par exemple : modifier l'état ou réassigner)
+            tokenService.useToken(userId, false);  // Consommer un jeton journalier
+            response.sendRedirect("tasks");  // Redirection après succès
+        } else {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    "Aucun jeton journalier disponible.");
+        }
+    }
+
+
 
 }

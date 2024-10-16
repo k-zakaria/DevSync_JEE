@@ -1,5 +1,6 @@
 package org.capps.repository.implementation;
 
+import org.capps.entity.Task;
 import org.capps.entity.User;
 import org.capps.repository.UserRepository;
 
@@ -39,8 +40,10 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public User findByEmail(String email){
-        return em.find(User.class, email);
+    public User findByEmail(String email) {
+        return em.createQuery("SELECT u FROM User u WHERE u.email = :email", User.class)
+                .setParameter("email", email)
+                .getSingleResult();
     }
 
     @Override

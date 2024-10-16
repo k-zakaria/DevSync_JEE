@@ -31,27 +31,21 @@ public class UserTokenServiceImpl implements UserTokenService {
         return token == null || token.getTokensUsed() < 2;
     }
 
-    // Vérifie si l'utilisateur a encore un jeton mensuel pour supprimer une tâche
     @Override
-    public boolean hasMonthlyToken(int userId){
+    public boolean checkAndRecordDeletion(int userId) {
+        LocalDate today = LocalDate.now();
+
         YearMonth currentMonth = YearMonth.now();
         LocalDate firstDayOfMonth = currentMonth.atDay(1);
 
         UserToken token = tokenRepository.findByUserIdAndDate(userId, firstDayOfMonth);
-        return token == null || token.getTokensUsed() < 1;
-    }
 
-    @Override
-    public boolean consumeToken(int userId){
-        LocalDate today = LocalDate.now();
-        UserToken token = tokenRepository.findByUserIdAndDate(userId, today);
-
-        if (token == null){
-            token = new UserToken(userId, today, 1);
+        if (token == null) {
+            token = new UserToken(userId, firstDayOfMonth, 0, true); // tokensUsed = 0 au début
             tokenRepository.save(token);
             return true;
-        }else if (token.getTokensUsed()<2){
-            token.setTokensUsed(token.getTokensUsed() + 1);
+        }else if (!token.isDeletedOnceInMonth()) {
+            token.setDeletedOnceInMonth(true);
             tokenRepository.update(token);
             return true;
         }
@@ -65,11 +59,16 @@ public class UserTokenServiceImpl implements UserTokenService {
         UserToken token = tokenRepository.findByUserIdAndDate(userId, date);
 
         if (token == null){
-            token = new UserToken(userId, date, 1);
+            token = new UserToken(userId, date, 1, false);
         }else {
             token.setTokensUsed(token.getTokensUsed() + 1);
         }
         tokenRepository.save(token);
+    }
+
+    @Override
+    public Integer getTokensUsed(int userId){
+        return tokenRepository.getTokensUsed(userId);
     }
 
     @Override

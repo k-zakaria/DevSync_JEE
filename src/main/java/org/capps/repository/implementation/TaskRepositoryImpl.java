@@ -15,8 +15,16 @@ public class TaskRepositoryImpl implements TaskRepository {
     }
 
     @Override
-    public List<Task> getAllTasks() {
-        return em.createQuery("SELECT t FROM Task t", Task.class).getResultList();
+    public List<Task> getTasksByUserId(int userId) {
+        return em.createQuery("SELECT t FROM Task t WHERE t.user.id = :userId", Task.class)
+                .setParameter("userId", userId)
+                .getResultList();
+    }
+
+    public List<Task> getAll(int userId) {
+        return em.createQuery("SELECT t FROM Task t WHERE t.user.id = :userId", Task.class)
+                .setParameter("userId", userId)
+                .getResultList();
     }
 
     @Override

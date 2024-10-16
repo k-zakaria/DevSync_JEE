@@ -1,7 +1,16 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="org.capps.entity.Tag" %> <!-- Change le chemin selon le bon package -->
+<%@ page import="org.capps.entity.User" %>
 
+
+<%
+    User utilisateur = (User) session.getAttribute("user");
+    if (utilisateur == null) {
+        response.sendRedirect("login");
+        return;
+    }
+%>
 
 <html>
 <head>

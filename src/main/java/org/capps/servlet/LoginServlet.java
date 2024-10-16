@@ -15,7 +15,6 @@ import java.io.IOException;
 @WebServlet("/login")
 public class LoginServlet extends HttpServlet {
 
-
     private UserService userService;
 
     public LoginServlet() {
@@ -24,8 +23,7 @@ public class LoginServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
-        response.sendRedirect( request.getContextPath() + "/login");
+        request.getRequestDispatcher("views/login.jsp").forward(request,response);
     }
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -42,11 +40,11 @@ public class LoginServlet extends HttpServlet {
             session.setAttribute("user", user);
 
             // Rediriger vers la page du tableau de bord après une connexion réussie
-            response.sendRedirect("/");
+            response.sendRedirect("/DevSync");
         } else {
             // Si la validation échoue, renvoyer à la page de login avec un message d'erreur
             request.setAttribute("error", "Email ou mot de passe incorrect.");
-            request.getRequestDispatcher("login.jsp").forward(request, response);
+            request.getRequestDispatcher("views/login.jsp").forward(request,response);
         }
     }
 

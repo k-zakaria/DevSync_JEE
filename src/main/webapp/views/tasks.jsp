@@ -5,13 +5,23 @@
 <%@ page import="org.capps.entity.Tag" %>
 <%@ page import="org.capps.entity.User" %>
 
+<%
+  User utilisateur = (User) session.getAttribute("user");
+  if (utilisateur == null) {
+    response.sendRedirect("login");
+    return;
+  }
+%>
+
+
 <html>
 <head>
   <title>Liste des Tâches</title>
   <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-</head>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" /></head>
+
 <body>
 <jsp:include page="/layout/navbar.jsp" />
 <div class="user-content mx-4 my-4">
@@ -81,24 +91,40 @@
         <td class="px-6 py-4">
           <!-- Modal pour la mise à jour de la tâche -->
           <a href="#" data-modal-target="update-task-modal-<%= task.getId() %>" data-modal-toggle="update-task-modal-<%= task.getId() %>" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">
-            Update
+            <i class="fa-solid fa-pen-to-square"></i>
           </a>
 
           <form action="tasks" method="post" style="display:inline;">
             <input type="hidden" name="id" value="<%= task.getId() %>">
             <input type="hidden" name="_method" value="DELETE">
             <button type="submit" class="text-white bg-gradient-to-r from-red-400 via-red-500 to-red-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">
-              Delete
+              <i class="fa-solid fa-trash"></i>
             </button>
           </form>
 
-          <form action="userTokenServlet" method="POST" style="display:inline;">
-            <input type="hidden" name="userId" value="1" />
-            <input type="hidden" name="taskId" value="<%= task.getId() %>" />
-            <button type="submit" class="text-white bg-gradient-to-r from-pink-400 via-pink-500 to-pink-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-pink-300 dark:focus:ring-pink-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">
-              Delete the task
+          <form action="${pageContext.request.contextPath}/userTokenServlet" method="POST" style="display:inline;">
+            <input type="hidden" name="userId" value="${sessionScope.user.id}" />
+            <input type="hidden" name="dailyTokenAction" value="replace" />
+            <button type="submit" class="text-gray-900 bg-gradient-to-r from-lime-200 via-lime-400 to-lime-500 hover:bg-gradient-to-br
+              focus:ring-4 focus:outline-none focus:ring-lime-300 dark:focus:ring-lime-800
+              font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">
+              <i class="fa-solid fa-repeat"></i>
             </button>
           </form>
+
+
+          <form action="${pageContext.request.contextPath}/userTokenServlet" method="POST" style="display:inline;">
+            <input type="hidden" name="userId" value="${sessionScope.user.id}" />
+            <input type="hidden" name="taskId" value="<%=task.getId()%>">
+            <input type="hidden" name="monthlyTokenAction" value="delete" />
+            <button type="submit" class="text-gray-900 bg-gradient-to-r from-lime-200 via-lime-400 to-lime-500 hover:bg-gradient-to-br
+              focus:ring-4 focus:outline-none focus:ring-lime-300 dark:focus:ring-lime-800
+              font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">
+              <i class="fa-solid fa-delete-left"></i>
+            </button>
+          </form>
+
+
 
 
 
